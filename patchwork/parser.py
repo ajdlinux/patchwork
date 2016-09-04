@@ -21,8 +21,10 @@
 
 import codecs
 import datetime
-from email.header import Header, decode_header
-from email.utils import parsedate_tz, mktime_tz
+from email.header import Header
+from email.header import decode_header
+from email.utils import parsedate_tz
+from email.utils import mktime_tz
 from fnmatch import fnmatch
 from functools import reduce
 import logging
@@ -33,9 +35,17 @@ from django.contrib.auth.models import User
 from django.utils import six
 from django.utils.six.moves import map
 
-from patchwork.models import (Patch, Project, Person, Comment, State,
-                              DelegationRule, Submission, CoverLetter,
-                              get_default_initial_patch_state)
+from patchwork.models import Comment
+from patchwork.models import CoverLetter
+from patchwork.models import DelegationRule
+from patchwork.models import get_default_initial_patch_state
+from patchwork.models import Patch
+from patchwork.models import Person
+from patchwork.models import Project
+from patchwork.models import SeriesRevision
+from patchwork.models import SeriesReference
+from patchwork.models import State
+from patchwork.models import Submission
 
 
 _hunk_re = re.compile(r'^\@\@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? \@\@')
@@ -98,6 +108,34 @@ def find_project_by_header(mail):
                 break
 
     return project
+
+
+def find_series(mail):
+    """Find a patch's `SeriesRevision`.
+
+    Traverse RFC822 headers, starting with most recent first, to find
+    ancestors and the related series. Headers are traversed in reverse
+    to handle series sent in reply to previous series, like so:
+
+        [PATCH 0/3] A cover letter
+          [PATCH 1/3] The first patch
+          ...
+          [PATCH v2 0/3] A cover letter
+            [PATCH v2 1/3] The first patch
+            ...
+
+    Args:
+        mail (email.message.Message): The mail to extract series from
+
+    Returns:
+        The matching `SeriesRevision` instance, if any
+    """
+    for ref in [mail.get('Message-ID').strip()] + find_references(mail):
+        # try parsing by RFC5322 fields first
+        try:
+            return SeriesReference.objects.get(msgid=ref).series
+        except SeriesReference.DoesNotExist:
+            pass
 
 
 def find_author(mail):
@@ -178,6 +216,13 @@ def find_references(mail):
     return refs
 
 
+def _parse_prefixes(subject_prefixes, regex):
+    for prefix in subject_prefixes:
+        m = regex.match(prefix)
+        if m:
+            return m
+
+
 def parse_series_marker(subject_prefixes):
     """Extract series markers from subject.
 
@@ -193,12 +238,34 @@ def parse_series_marker(subject_prefixes):
     """
 
     regex = re.compile('^([0-9]+)/([0-9]+)$')
-    for prefix in subject_prefixes:
-        m = regex.match(prefix)
-        if not m:
-            continue
+    m = _parse_prefixes(subject_prefixes, regex)
+    if m:
         return (int(m.group(1)), int(m.group(2)))
+
     return (None, None)
+
+
+def parse_version(subject, subject_prefixes):
+    """Extract patch version.
+
+    Args:
+        subject: Main body of subject line
+        subject_prefixes: List of subject prefixes to extract version
+          from
+
+    Returns:
+        version if found, else 1
+    """
+    regex = re.compile('^[vV](\d+)$')
+    m = _parse_prefixes(subject_prefixes, regex)
+    if m:
+        return int(m.group(1))
+
+    m = re.search(r'\([vV](\d+)\)', subject)
+    if m:
+        return int(m.group(1))
+
+    return 1
 
 
 def find_content(project, mail):
@@ -622,6 +689,7 @@ def parse_mail(mail, list_id=None):
     author = find_author(mail)
     name, prefixes = clean_subject(mail.get('Subject'), [project.linkname])
     x, n = parse_series_marker(prefixes)
+    version = parse_version(name, prefixes)
     refs = find_references(mail)
     date = find_date(mail)
     headers = find_headers(mail)
@@ -638,9 +706,22 @@ def parse_mail(mail, list_id=None):
             filenames = find_filenames(diff)
             delegate = auto_delegate(project, filenames)
 
+        series = find_series(mail)
+        if not series and n:  # the series markers indicates a series
+            series = SeriesRevision(date=date,
+                                    submitter=author,
+                                    version=version,
+                                    total=n)
+            series.save()
+
+            for ref in refs + [msgid]:  # save references for series
+                # we don't want duplicates
+                SeriesReference.objects.get_or_create(series=series, msgid=ref)
+
         patch = Patch(
             msgid=msgid,
             project=project,
+            series=series,
             name=name,
             date=date,
             headers=headers,
@@ -674,9 +755,23 @@ def parse_mail(mail, list_id=None):
         if is_cover_letter:
             author.save()
 
+            series = find_series(mail)
+            if not series:
+                series = SeriesRevision(date=date,
+                                        submitter=author,
+                                        version=version,
+                                        total=n)
+                series.save()
+
+                for ref in refs + [msgid]:  # save references for series
+                    # we don't want duplicates
+                    SeriesReference.objects.get_or_create(series=series,
+                                                          msgid=ref)
+
             cover_letter = CoverLetter(
                 msgid=msgid,
                 project=project,
+                series=series,
                 name=name,
                 date=date,
                 headers=headers,

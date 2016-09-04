@@ -49,3 +49,22 @@ class ParsemailTest(TestCase):
                              stdin=file_)
 
             self.assertEqual(exc.exception.code, 1)
+
+
+class ParsearchiveTest(TestCase):
+    def test_invalid_path(self):
+        out = StringIO()
+        with self.assertRaises(SystemExit) as exc:
+            call_command('parsearchive', 'xyz123random', stdout=out)
+        self.assertEqual(exc.exception.code, 1)
+
+    def test_invalid_mbox(self):
+        out = StringIO()
+        # we haven't created a project yet, so this will fail
+        call_command('parsearchive',
+                     os.path.join(TEST_MAIL_DIR,
+                                  '0001-git-pull-request.mbox'),
+                     stdout=out)
+
+        self.assertIn('Processed 1 messages -->', out.getvalue())
+        self.assertIn('  1 dropped', out.getvalue())

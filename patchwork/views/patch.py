@@ -113,7 +113,7 @@ def content(request, patch_id):
     response = HttpResponse(content_type="text/x-patch")
     response.write(patch.diff)
     response['Content-Disposition'] = 'attachment; filename=' + \
-        patch.filename().replace(';', '').replace('\n', '')
+        patch.filename.replace(';', '').replace('\n', '')
     return response
 
 
@@ -126,7 +126,7 @@ def mbox(request, patch_id):
     else:
         response.write(patch_to_mbox(patch).as_string(True))
     response['Content-Disposition'] = 'attachment; filename=' + \
-        patch.filename().replace(';', '').replace('\n', '')
+        patch.filename.replace(';', '').replace('\n', '')
     return response
 
 

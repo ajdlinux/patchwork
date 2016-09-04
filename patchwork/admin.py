@@ -21,9 +21,21 @@ from __future__ import absolute_import
 
 from django.contrib import admin
 
-from patchwork.models import (Project, Person, UserProfile, State, Submission,
-                              Patch, CoverLetter, Comment, Bundle, Tag, Check,
-                              DelegationRule)
+from patchwork.models import Bundle
+from patchwork.models import Check
+from patchwork.models import Comment
+from patchwork.models import CoverLetter
+from patchwork.models import DelegationRule
+from patchwork.models import Patch
+from patchwork.models import Person
+from patchwork.models import Project
+from patchwork.models import Series
+from patchwork.models import SeriesReference
+from patchwork.models import SeriesRevision
+from patchwork.models import State
+from patchwork.models import Submission
+from patchwork.models import Tag
+from patchwork.models import UserProfile
 
 
 class DelegationRuleInline(admin.TabularInline):
@@ -76,8 +88,8 @@ admin.site.register(CoverLetter, CoverLetterAdmin)
 
 class PatchAdmin(admin.ModelAdmin):
     list_display = ('name', 'submitter', 'project', 'state', 'date',
-                    'archived', 'is_pull_request')
-    list_filter = ('project', 'state', 'archived')
+                    'archived', 'is_pull_request', 'series')
+    list_filter = ('project', 'state', 'archived', 'series')
     search_fields = ('name', 'submitter__name', 'submitter__email')
     date_hierarchy = 'date'
 
@@ -95,6 +107,54 @@ class CommentAdmin(admin.ModelAdmin):
     search_fields = ('submission__name', 'submitter__name', 'submitter__email')
     date_hierarchy = 'date'
 admin.site.register(Comment, CommentAdmin)
+
+
+class CoverLetterInline(admin.StackedInline):
+    model = CoverLetter
+    extra = 0
+
+
+class PatchInline(admin.StackedInline):
+    model = Patch
+    extra = 0
+
+
+class SeriesRevisionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'group', 'date', 'submitter', 'version', 'total',
+                    'actual_total', 'complete')
+    readonly_fields = ('actual_total', 'complete')
+    search_fields = ('submitter_name', 'submitter_email')
+    inlines = [CoverLetterInline, PatchInline]
+
+    def complete(self, series):
+        return series.complete
+    complete.boolean = True
+admin.site.register(SeriesRevision, SeriesRevisionAdmin)
+
+
+class SeriesRevisionInline(admin.StackedInline):
+    model = SeriesRevision
+    readonly_fields = ('date', 'submitter', 'version', 'total',
+                       'actual_total', 'complete')
+    ordering = ('-date', )
+    show_change_link = True
+    extra = 0
+
+    def complete(self, series):
+        return series.complete
+    complete.boolean = True
+
+
+class SeriesAdmin(admin.ModelAdmin):
+    list_display = ('name', )
+    readonly_fields = ('name', )
+    inlines = [SeriesRevisionInline]
+admin.site.register(Series, SeriesAdmin)
+
+
+class SeriesReferenceAdmin(admin.ModelAdmin):
+    model = SeriesReference
+admin.site.register(SeriesReference, SeriesReferenceAdmin)
 
 
 class CheckAdmin(admin.ModelAdmin):

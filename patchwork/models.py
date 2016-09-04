@@ -182,6 +182,101 @@ models.signals.post_save.connect(_user_saved_callback, sender=User)
 
 
 @python_2_unicode_compatible
+class Series(models.Model):
+    """A collection of series.
+
+    Provides a way to group series revisions such that finding a series
+    revisions won't require a large amount of computation each time.
+    The model itself should never be exposed to users - instead expose
+    the individual revisions.
+    """
+
+    @property
+    def name(self):
+        # TODO(stephenfin) If there is a non-empty revision name we
+        # should use that instead
+        if self.latest_revision:
+            return self.latest_revision.name
+        return '[Series #%d]' % self.id
+
+    @property
+    def latest_revision(self):
+        # TODO(stephenfin) Can this raise an exception?
+        return self.revisions.latest('date')
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name_plural = 'Series'
+
+
+@python_2_unicode_compatible
+class SeriesRevision(models.Model):
+
+    group = models.ForeignKey(Series, related_name='revisions',
+                              related_query_name='revision', null=True,
+                              blank=True)
+    date = models.DateTimeField()
+    submitter = models.ForeignKey(Person)
+    version = models.IntegerField(default=1,
+                                  help_text='Version of series revision as '
+                                  'indicated by the subject prefix(es)')
+    total = models.IntegerField(help_text='Number of patches in series as '
+                                'indicated by the subject prefix(es)')
+
+    @cached_property
+    def name(self):
+        try:
+            return self.cover_letter.name
+        except CoverLetter.DoesNotExist:
+            return '[Series #%d, revision #%d]' % (self.group.id,
+                                                   self.version)
+
+    @property
+    def actual_total(self):
+        return Patch.objects.filter(series=self).count()
+
+    @property
+    def complete(self):
+        return self.total == self.actual_total
+
+    @property
+    def patches(self):
+        """Return patches associated with this series.
+
+        Eventually this will "autofill" a series revision by pulling in
+        missing patches from prior revisions, where possible. For now,
+        however, this just lets us retrieve the patches created for
+        this given revision.
+
+        Returns:
+            The patches in the revision.
+        """
+        return self.unique_patches.all()
+
+    def __str__(self):
+        return self.name
+
+
+@python_2_unicode_compatible
+class SeriesReference(models.Model):
+    """A reference found in a series.
+
+    Message IDs should be created for all patches in a series,
+    including those of patches that have not yet been received. This is
+    required to handle the case whereby one or more patches are
+    received before the cover letter.
+    """
+    series = models.ForeignKey(SeriesRevision, related_name='references',
+                               related_query_name='reference')
+    msgid = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.msgid
+
+
+@python_2_unicode_compatible
 class State(models.Model):
     name = models.CharField(max_length=100)
     ordering = models.IntegerField(unique=True)
@@ -295,7 +390,7 @@ class EmailMixin(models.Model):
 
 @python_2_unicode_compatible
 class Submission(EmailMixin, models.Model):
-    # parent
+    # parents
 
     project = models.ForeignKey(Project)
 
@@ -320,11 +415,20 @@ class Submission(EmailMixin, models.Model):
 
 
 class CoverLetter(Submission):
-    pass
+    # parents
+
+    series = models.OneToOneField(SeriesRevision, related_name='cover_letter',
+                                  null=True, blank=True)
 
 
 @python_2_unicode_compatible
 class Patch(Submission):
+    # parents
+
+    series = models.ForeignKey(SeriesRevision, related_name='unique_patches',
+                               related_query_name='patch',
+                               null=True, blank=True)
+
     # patch metadata
 
     diff = models.TextField(null=True, blank=True)

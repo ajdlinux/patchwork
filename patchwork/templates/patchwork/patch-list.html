@@ -83,6 +83,11 @@ $(document).ready(function() {
    </th>
 
    <th>
+    <!-- TODO(stephenfin) Make this column sortable -->
+    <span class="colinactive">Series</span>
+   </th>
+
+   <th>
     {% project_tags %}
    </th>
 
@@ -175,6 +180,13 @@ $(document).ready(function() {
     <a href="{% url 'patch-detail' patch_id=patch.id %}">
      {{ patch.name|default:"[no subject]"|truncatechars:100 }}
     </a>
+   </td>
+   <td>
+    {% if patch.series %}
+    <a href="?series={{patch.series.id}}">
+     {{ patch.series.name|truncatechars:100 }}
+    </a>
+    {% endif %}
    </td>
    <td class="text-nowrap">{{ patch|patch_tags }}</td>
    <td class="text-nowrap">{{ patch|patch_checks }}</td>

@@ -33,14 +33,10 @@ register = template.Library()
 @register.filter
 def personify(person, project):
 
-    if person.name:
-        linktext = escape(person.name)
-    else:
-        linktext = escape(person.email)
-
     url = reverse('patch-list',
                   kwargs={'project_id': project.linkname})
-    str = '<a href="%s?%s=%s">%s</a>' % (
-        url, SubmitterFilter.param, escape(person.id), linktext)
+    elem = '<a href="%s?%s=%s" title="%s">%s</a>' % (
+        url, SubmitterFilter.param, escape(person.id), str(person),
+        person.name or person.handle)
 
-    return mark_safe(str)
+    return mark_safe(elem)

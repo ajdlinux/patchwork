@@ -51,6 +51,13 @@ class Person(models.Model):
         self.name = user.profile.name
         self.user = user
 
+    @property
+    def handle(self):
+        if self.user:
+            return self.user.name
+        else:
+            return self.email.split('@')[0]
+
     def __str__(self):
         if self.name:
             return '%s <%s>' % (self.name, self.email)

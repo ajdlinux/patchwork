@@ -237,8 +237,11 @@ class SeriesRevision(models.Model):
         try:
             return self.cover_letter.name
         except CoverLetter.DoesNotExist:
-            return '[Series #%d, revision #%d]' % (self.group.id,
-                                                   self.version)
+            try:
+                return '[Series #%d, revision #%d]' % (self.group.id,
+                                                       self.version)
+            except:
+                return 'idk'
 
     @property
     def actual_total(self):

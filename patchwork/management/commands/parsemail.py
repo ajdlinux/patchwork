@@ -57,18 +57,12 @@ class Command(base.BaseCommand):
                 'extracted from the mail headers.')
 
     def handle(self, *args, **options):
-        path = (args[0] if args else
-                options['infile'] if 'infile' in options else None)
-        stdin = options.get('stdin', sys.stdin)
-
-        # Attempt to parse the path if provided, and fallback to stdin if not
-        if path and not isinstance(path, file):
-            logger.info('Parsing mail loaded by filename')
-            with open(path, 'r+') as file_:
-                mail = message_from_file(file_)
-        else:
+        infile = options['infile']
+        if infile == sys.stdin:
             logger.info('Parsing mail loaded from stdin')
-            mail = message_from_file(stdin)
+        else:
+            logger.info('Parsing mail loaded by filename')
+        mail = message_from_file(infile)
 
         try:
             result = parse_mail(mail, options['list_id'])

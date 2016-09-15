@@ -27,7 +27,7 @@ from rest_framework.serializers import (
     CurrentUserDefault, HiddenField, HyperlinkedModelSerializer,
     ListSerializer, ModelSerializer, SerializerMethodField)
 
-from patchwork.models import Check, Patch, Person, Project, SeriesRevision
+from patchwork.models import Check, Patch, Person, Project, SeriesRevision, Series
 
 
 class URLSerializer(HyperlinkedModelSerializer):
@@ -119,6 +119,13 @@ class SeriesRevisionSerializer(URLSerializer):
 #            url = self.context['request'].build_absolute_uri(reverse(
 #                'api_1.0:patch-detail', args=[patch.id]))
     patches = HyperlinkedRelatedField(many=True, read_only=True, view_name='patch-detail')
+    group = HyperlinkedRelatedField(read_only=True, view_name='series-detail')
+
+class SeriesSerializer(URLSerializer):
+    class Meta:
+        model = Series
+        fields = ('name', 'latest_revision', 'revisions')
+    revisions = HyperlinkedRelatedField(read_only=True, view_name='seriesrevision-detail')
 
 class CurrentPatchDefault(object):
     def set_context(self, serializer_field):

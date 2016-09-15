@@ -21,7 +21,7 @@ from django.conf import settings
 from patchwork.models import Patch
 from patchwork.rest_serializers import (
     ChecksSerializer, PatchSerializer, PersonSerializer, ProjectSerializer,
-    UserSerializer, SeriesRevisionSerializer)
+    UserSerializer, SeriesRevisionSerializer, SeriesSerializer)
 
 from rest_framework import permissions
 from rest_framework.exceptions import PermissionDenied
@@ -138,6 +138,10 @@ class SeriesRevisionViewSet(PatchworkViewSet):
     permission_classes = (PatchworkPermission,)
     serializer_class = SeriesRevisionSerializer
 
+class SeriesViewSet(PatchworkViewSet):
+    permission_classes = (PatchworkPermission,)
+    serializer_class = SeriesSerializer
+
 class CheckViewSet(PatchworkViewSet):
     serializer_class = ChecksSerializer
 
@@ -174,6 +178,7 @@ router.register('people', PeopleViewSet, 'person')
 router.register('projects', ProjectViewSet, 'project')
 router.register('users', UserViewSet, 'user')
 router.register('seriesrevisions', SeriesRevisionViewSet, 'seriesrevision')
+router.register('series', SeriesViewSet, 'series')
 
 patches_router = NestedSimpleRouter(router, r'patches', lookup='patch')
 patches_router.register(r'checks', CheckViewSet, base_name='patch-checks')

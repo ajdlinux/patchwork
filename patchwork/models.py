@@ -265,6 +265,9 @@ class SeriesRevision(models.Model):
         """
         return self.unique_patches.all()
 
+    def is_editable(self, user):
+        return False
+
     def __str__(self):
         return self.name
 

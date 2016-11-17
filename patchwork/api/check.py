@@ -77,7 +77,7 @@ class CheckSerializer(HyperlinkedModelSerializer):
 
     class Meta:
         model = Check
-        fields = ('url', 'patch', 'user', 'date', 'state', 'target_url',
+        fields = ('id', 'url', 'patch', 'user', 'date', 'state', 'target_url',
                   'description', 'context',)
         read_only_fields = ('date',)
         extra_kwargs = {

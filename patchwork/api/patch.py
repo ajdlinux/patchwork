@@ -40,33 +40,44 @@ class PatchListSerializer(ListSerializer):
 class PatchSerializer(HyperlinkedModelSerializer):
     mbox = SerializerMethodField()
     state = SerializerMethodField()
+    tags = SerializerMethodField()
+    headers = SerializerMethodField()
+    check = SerializerMethodField()
 
-    class Meta:
-        model = Patch
-        list_serializer_class = PatchListSerializer
-        read_only_fields = ('project', 'name', 'date', 'submitter', 'diff',
-                            'content', 'hash', 'msgid')
-        # there's no need to expose an entire "tags" endpoint, so we custom
-        # render this field
-        exclude = ('tags',)
+    def get_state(self, instance):
+        return instance.state.name
 
-    def get_state(self, obj):
-        return obj.state.name
+    def get_mbox(self, instance):
+        request = self.context.get('request')
+        return request.build_absolute_uri(instance.get_mbox_url())
 
-    def get_mbox(self, patch):
-        request = self.context.get('request', None)
-        return request.build_absolute_uri(patch.get_mbox_url())
+    def get_tags(self, instance):
+        # TODO(stephenfin): I don't think this is correct - too many queries
+        return [{'name': x.tag.name, 'count': x.count}
+                for x in instance.patchtag_set.all()]
+
+    def get_headers(self, instance):
+        if instance.headers:
+            return
+        email.parser.Parser().parsestr(instance.headers, True)
+
+    def get_check(self, instance):
+        return instance.combined_check_state
 
     def to_representation(self, instance):
         data = super(PatchSerializer, self).to_representation(instance)
         data['checks'] = data['url'] + 'checks/'
-        data['check'] = instance.combined_check_state
-        headers = data.get('headers')
-        if headers is not None:
-            data['headers'] = email.parser.Parser().parsestr(headers, True)
-        data['tags'] = [{'name': x.tag.name, 'count': x.count}
-                        for x in instance.patchtag_set.all()]
         return data
+
+    class Meta:
+        model = Patch
+        list_serializer_class = PatchListSerializer
+        fields = ('url', 'project', 'msgid', 'date', 'name', 'commit_ref',
+                  'pull_url', 'state', 'archived', 'hash', 'submitter',
+                  'delegate', 'mbox', 'check', 'checks', 'tags', 'headers',
+                  'content', 'diff')
+        read_only_fields = ('project', 'name', 'date', 'submitter', 'diff',
+                            'content', 'hash', 'msgid')
 
 
 class PatchViewSet(PatchworkViewSet):

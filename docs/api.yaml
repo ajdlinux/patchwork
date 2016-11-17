@@ -52,7 +52,7 @@ paths:
             $ref: '#/definitions/Error'
   /projects/{projectId}:
     get:
-      summary: Retrieve a project by its ID.
+      summary: Retrieve a project.
       description: |
         Returns information about a single project available on this patchwork
         instance. The response includes the display name and other details
@@ -68,6 +68,28 @@ paths:
             $ref: '#/definitions/Project'
         404:
           description: The project does not exist
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/Error'
+    patch:
+      summary: Update a project.
+      description: |
+        Update information about a single project available on this patchwork
+        instance.
+      parameters:
+        - $ref: '#/parameters/projectId'
+      tags:
+        - Projects
+      responses:
+        200:
+          description: A project object.
+          schema:
+            $ref: '#/definitions/Project'
+        403:
+          description: The user is not authenticated or is not a superuser.
+        404:
+          description: The project does not exist.
         default:
           description: Unexpected error.
           schema:
@@ -91,13 +113,15 @@ paths:
             type: array
             items:
               $ref: '#/definitions/People'
+        403:
+          description: The user is not authenticated.
         default:
           description: Unexpected error.
           schema:
             $ref: '#/definitions/Error'
   /people/{personId}:
     get:
-      summary: Retrieve a person by its ID.
+      summary: Retrieve a person.
       description: |
         Returns information about a single person who has submitted patches on
         this patchwork instance. The response includes the name, email and
@@ -111,8 +135,10 @@ paths:
           description: A person object.
           schema:
             $ref: '#/definitions/People'
+        403:
+          description: The user is not authenticated.
         404:
-          description: The project does not exist
+          description: The person does not exist.
         default:
           description: Unexpected error.
           schema:
@@ -131,22 +157,6 @@ paths:
         - $ref: '#/parameters/pageParam'
         - $ref: '#/parameters/sinceParam'
         - $ref: '#/parameters/untilParam'
-        - name: project
-          description: project name by which to filter
-          in: query
-          type: string
-        - name: state
-          description: patch state by which to filter
-          in: query
-          type: string
-        - name: submitter
-          description: username or email of submitter by which to filter
-          in: query
-          type: string
-        - name: delegate
-          description: username or email of delegate by which to filter
-          in: query
-          type: string
       responses:
         200:
           description: An array of patch objects.
@@ -160,7 +170,7 @@ paths:
             $ref: '#/definitions/Error'
   /patches/{patchId}:
     get:
-      summary: Retrieve a patch by its ID.
+      summary: Retrieve a patch.
       description: |
         Returns information about a single patch available on this patchwork
         instance. The response includes the name, diff and other details
@@ -180,9 +190,33 @@ paths:
           description: Unexpected error.
           schema:
             $ref: '#/definitions/Error'
+    patch:
+      summary: Update a patch.
+      description: |
+        Update information about a patch.
+      parameters:
+        - $ref: '#/parameters/patchId'
+      tags:
+        - Patches
+      responses:
+        200:
+          description: A patch object.
+          schema:
+            $ref: '#/definitions/PatchDetail'
+        403:
+          description: |
+            The user is not authenticated, or the user did not create the
+            patch and is not a super user.
+        404:
+          description: The patch does not exist
+        default:
+          description: Unexpected error.
+          schema:
+            $ref: '#/definitions/Error'
+        - $ref: '#/parameters/patchId'
   /patches/{patchId}/checks:
     get:
-      summary: List check statuses for given patch.
+      summary: List checks for given patch.
       description: |
         Checks store the results of any tests executed (or executing) for a
         given patch. This is useful, for example, when using a continuous
@@ -195,39 +229,16 @@ paths:
         - Checks
       responses:
         200:
-          description: An array of check objects.
-          schema:
-            type: array
-            items:
-              $ref: '#/definitions/Check'
-        404:
-          description: The patch does not exist
-        default:
-          description: Unexpected error.
-          schema:
-            $ref: '#/definitions/Error'
-  /patches/{patchId}/check:
-    get:
-      summary: Retrieve combined check status for given patch.
-      description: |
-        Checks store the results of any tests executed (or executing) for a
-        given patch. This is useful, for example, when using a continuous
-        integration (CI) system to test patches.
-      parameters:
-        - $ref: '#/parameters/patchId'
-      tags:
-        - Checks
-      responses:
-        200:
           description: A check object.
           schema:
             $ref: '#/definitions/Check'
         404:
-          description: The patch does not exist
+          description: The parent patch does not exist
         default:
           description: Unexpected error.
           schema:
             $ref: '#/definitions/Error'
+  # TODO(stephenfin): Document creation of checks, listing of users
 parameters:
   # ID Parameters
   projectId:
@@ -293,18 +304,21 @@ definitions:
       id:
         type: integer
         description: Unique identifier of project.
+      url:
+        type: string
+        description: url to project.
       name:
         type: string
         description: Name of project.
       link_name:
         type: string
         description: Link name of project.
-      list_email:
-        type: string
-        description: Mailing list email address for project.
       list_id:
         type: string
         description: Mailing list identifier for project.
+      list_email:
+        type: string
+        description: Mailing list email address for project.
       web_url:
         type: string
         description: Upstream website URL for project.
@@ -319,33 +333,46 @@ definitions:
       id:
         type: integer
         description: Unique identifier of patch.
-      project_url:
-        type: integer
-        description: Project ID of patch.
-      name:
+      url:
         type: string
-        description: Name of patch.
+        description: URL to patch.
+      project:
+        type: string
+        description: URL to patch's project.
+      msgid:
+        type: string
+        description: Message ID header from patch mail.
       date:
         type: string
         format: date-time
         description: Submission date of patch.
+      name:
+        type: string
+        description: Name of patch.
+      commit_ref:
+        type: string
+        description: Ref of committed patch.
+      pull_url:
+        type: string
+        description: URL to patch pull request.
+      state:
+        type: string
+        description: The state of the patch.
+      archived:
+        type: boolean
+        description: Archival state of patch.
+      hash:
+        type: string
+        description: Hash of patch's diff.
       submitter:
         type: string
         description: URL for submitter of patch.
       delegate:
         type: integer
         description: URL for delegate assigned to patch.
-      state:
-        type: string
-        description: The state of the patch.
-      mbox_url:
+      mbox:
         type: string
         description: Link to the raw patch mbox contents.
-      tags:
-        type: array
-        description: Tags associated with patch.
-        items:
-          type: string
       check:
         type: string
         description: The combined check status for the patch.
@@ -354,6 +381,14 @@ definitions:
           - success
           - warning
           - fail
+      checks:
+        type: string
+        description: URL to patch's checks endpoint.
+      tags:
+        type: array
+        description: Tags associated with patch.
+        items:
+          type: string
   PatchDetail:
     allOf:
       $ref: '#/definitions/Patch'
@@ -374,23 +409,32 @@ definitions:
       id:
         type: integer
         description: Unique identifier of person.
+      url:
+        type: string
+        description: URL to person.
       name:
         type: string
         description: Name of person.
       email:
         type: string
         description: Email of person.
-      user_url:
+      user:
         type: string
-        description: URL for Patchwork user account connected to person.
+        description: URL for user connected to person.
   Check:
     properties:
       id:
         type: integer
         description: Unique identifier of check.
-      user_url:
+      url:
+        type: string
+        description: URL to check.
+      user:
         type: string
         description: URL for creator of check.
+      date:
+        type: string
+        format: date-time
       state:
         type: string
         description: The state of the check.
@@ -399,17 +443,37 @@ definitions:
           - success
           - warning
           - fail
-      url:
+      target_url:
         type: string
         description: The target URL associated with this check.
-      description:
-        type: string
-        description: A brief description of the check.
       context:
         type: string
         description: |
           A label to discern check from checks of other testing systems.
-  Error:
+      description:
+        type: string
+        description: A brief description of the check.
+  User:
+    properties:
+      id:
+        type: integer
+        description: Unique identifier of user.
+      url:
+        type: string
+        description: URL to user.
+      username:
+        type: string
+        description: Username of user.
+      first_name:
+        type: string
+        description: First name of user.
+      last_name:
+        type: string
+        description: Last name of user.
+      email:
+        type: string
+        description: Email of user.
+    Error:
     properties:
       code:
         type: integer

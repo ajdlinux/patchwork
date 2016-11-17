@@ -21,6 +21,7 @@ from rest_framework.generics import ListAPIView
 from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.serializers import CharField
 from rest_framework.serializers import HyperlinkedModelSerializer
+from rest_framework.serializers import HyperlinkedRelatedField
 
 from patchwork.api import PatchworkPermission
 from patchwork.models import Project
@@ -31,11 +32,15 @@ class ProjectSerializer(HyperlinkedModelSerializer):
     link_name = CharField(max_length=255, source='linkname')
     list_id = CharField(max_length=255, source='listid')
     list_email = CharField(max_length=255, source='listemail')
+    maintainers = HyperlinkedRelatedField(
+        many=True, read_only=True, view_name='api-user-detail',
+        source='maintainer_project')
 
     class Meta:
         model = Project
         fields = ('id', 'url', 'name', 'link_name', 'list_id', 'list_email',
-                  'web_url', 'scm_url', 'webscm_url')
+                  'web_url', 'scm_url', 'webscm_url', 'maintainers')
+        read_only_fields = ('maintainers',)
         extra_kwargs = {
             'url': {'view_name': 'api-project-detail'},
         }

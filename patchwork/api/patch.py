@@ -78,7 +78,8 @@ class PatchListSerializer(HyperlinkedModelSerializer):
         model = Patch
         fields = ('id', 'url', 'project', 'msgid', 'date', 'name',
                   'commit_ref', 'pull_url', 'state', 'archived', 'hash',
-                  'submitter', 'delegate', 'mbox', 'check', 'checks', 'tags')
+                  'submitter', 'delegate', 'mbox', 'series', 'check', 'checks',
+                  'tags')
         read_only_fields = ('project', 'msgid', 'date', 'name', 'hash',
                             'submitter', 'mbox', 'mbox', 'series', 'check',
                             'checks', 'tags')
@@ -87,6 +88,8 @@ class PatchListSerializer(HyperlinkedModelSerializer):
             'project': {'view_name': 'api-project-detail'},
             'submitter': {'view_name': 'api-person-detail'},
             'delegate': {'view_name': 'api-user-detail'},
+            'series': {'view_name': 'api-series-detail',
+                       'lookup_url_kwarg': 'pk'},
         }
 
 
@@ -110,7 +113,7 @@ class PatchList(ListAPIView):
     """List patches."""
 
     queryset = Patch.objects.all().with_tag_counts().prefetch_related(
-        'check_set').select_related(
+        'series', 'check_set').select_related(
         'state', 'submitter', 'delegate').defer(
         'content', 'diff', 'headers')
     permission_classes = (PatchworkPermission,)
@@ -121,7 +124,7 @@ class PatchDetail(RetrieveUpdateAPIView):
     """Show a patch."""
 
     queryset = Patch.objects.all().with_tag_counts().prefetch_related(
-        'check_set').select_related(
+        'series', 'check_set').select_related(
         'state', 'submitter', 'delegate')
     permission_classes = (PatchworkPermission,)
     serializer_class = PatchDetailSerializer

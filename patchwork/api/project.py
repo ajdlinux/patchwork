@@ -17,11 +17,12 @@
 # along with Patchwork; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from rest_framework.generics import ListAPIView
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.serializers import CharField
 from rest_framework.serializers import HyperlinkedModelSerializer
 
 from patchwork.api import PatchworkPermission
-from patchwork.api import PatchworkViewSet
 from patchwork.models import Project
 
 
@@ -35,26 +36,40 @@ class ProjectSerializer(HyperlinkedModelSerializer):
         model = Project
         fields = ('url', 'name', 'link_name', 'list_id', 'list_email',
                   'web_url', 'scm_url', 'webscm_url')
+        read_only_fields = ('name', 'maintainers')
+        extra_kwargs = {
+            'url': {'view_name': 'api-project-detail'},
+        }
 
 
-class ProjectViewSet(PatchworkViewSet):
+class ProjectMixin(object):
+
     permission_classes = (PatchworkPermission,)
     serializer_class = ProjectSerializer
 
-    def _handle_linkname(self, pk):
-        '''Make it easy for users to list by project-id or linkname'''
-        qs = self.get_queryset()
-        try:
-            qs.get(id=pk)
-        except (self.serializer_class.Meta.model.DoesNotExist, ValueError):
-            # probably a non-numeric value which means we are going by linkname
-            self.kwargs = {'linkname': pk}  # try and lookup by linkname
-            self.lookup_field = 'linkname'
+    def get_queryset(self):
+        query = Project.objects.all()
 
-    def retrieve(self, request, pk=None):
-        self._handle_linkname(pk)
-        return super(ProjectViewSet, self).retrieve(request, pk)
+        if 'pk' in self.kwargs:
+            try:
+                query.get(id=int(self.kwargs['pk']))
+            except (ValueError, Project.DoesNotExist):
+                query.get(linkname=self.kwargs['pk'])
 
-    def partial_update(self, request, pk=None):
-        self._handle_linkname(pk)
-        return super(ProjectViewSet, self).partial_update(request, pk)
+            # NOTE(stephenfin): We must do this to make sure the 'url'
+            # field is populated correctly
+            self.kwargs['pk'] = query[0].id
+
+        return query
+
+
+class ProjectList(ProjectMixin, ListAPIView):
+    """List projects."""
+
+    pass
+
+
+class ProjectDetail(ProjectMixin, RetrieveUpdateAPIView):
+    """Show a project."""
+
+    pass

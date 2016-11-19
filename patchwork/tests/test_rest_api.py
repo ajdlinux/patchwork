@@ -31,6 +31,7 @@ from patchwork.tests.utils import create_maintainer
 from patchwork.tests.utils import create_patch
 from patchwork.tests.utils import create_person
 from patchwork.tests.utils import create_project
+from patchwork.tests.utils import create_state
 from patchwork.tests.utils import create_user
 
 if settings.ENABLE_REST_API:
@@ -368,11 +369,12 @@ class TestPatchAPI(APITestCase):
         # A maintainer can update
         project = create_project()
         patch = create_patch(project=project)
+        state = create_state()
         user = create_maintainer(project)
         self.client.force_authenticate(user=user)
 
         resp = self.client.patch(self.api_url(patch.id),
-                                 {'state': 2})
+                                 {'state': state.name})
         self.assertEqual(status.HTTP_200_OK, resp.status_code)
 
         # A normal user can't
@@ -380,7 +382,7 @@ class TestPatchAPI(APITestCase):
         self.client.force_authenticate(user=user)
 
         resp = self.client.patch(self.api_url(patch.id),
-                                 {'state': 2})
+                                 {'state': state.name})
         self.assertEqual(status.HTTP_403_FORBIDDEN, resp.status_code)
 
     def test_delete(self):

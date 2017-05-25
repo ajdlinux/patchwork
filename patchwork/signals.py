@@ -19,6 +19,7 @@
 
 from datetime import datetime as dt
 
+from django.conf import settings
 from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
@@ -239,3 +240,12 @@ def create_series_completed_event(sender, instance, created, **kwargs):
 
     if instance.series.received_all:
         create_event(instance.series)
+
+
+if settings.ENABLE_REST_API:
+    from rest_framework.authtoken.models import Token
+    @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+    def create_user_created_event(sender, instance=None, created=False,
+                                  **kwargs):
+        if created:
+            Token.objects.create(user=instance)

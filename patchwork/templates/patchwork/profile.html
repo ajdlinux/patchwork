@@ -133,8 +133,27 @@ address.</p>
 </div>
 
 <div class="box">
-<h2>Authentication</h2>
-<a href="{% url 'password_change' %}">Change password</a>
+  <h2>Authentication</h2>
+  <form method="post" action="{%url 'generate_token' %}">
+    {% csrf_token %}
+    <table>
+      <tr>
+	<th>Password:</th>
+	<td><a href="{% url 'password_change' %}">Change password</a>
+      </tr>
+      <tr>
+	<th>API Token:</th>
+	<td>
+	  {% if api_token %}
+	  {{ api_token }}
+	  <input type="submit" value="Regenerate token" />
+	  {% else %}
+	  <input type="submit" value="Generate token" />
+	  {% endif %}
+	</td>
+      </tr>
+    </table>
+  </form>
 </div>
 
 </div>

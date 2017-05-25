@@ -42,6 +42,8 @@ from patchwork.models import Project
 from patchwork.models import State
 from patchwork.views import generic_list
 
+if settings.ENABLE_REST_API:
+    from rest_framework.authtoken.models import Token
 
 def register(request):
     context = {}
@@ -126,6 +128,11 @@ def profile(request):
         .extra(select={'is_optout': optout_query})
     context['linked_emails'] = people
     context['linkform'] = EmailForm()
+    if settings.ENABLE_REST_API:
+        try:
+            context['api_token'] = Token.objects.get(user=request.user)
+        except Token.DoesNotExist:
+            pass
 
     return render(request, 'patchwork/profile.html', context)
 
@@ -232,3 +239,15 @@ def todo_list(request, project_id):
     context['action_required_states'] = \
         State.objects.filter(action_required=True).all()
     return render(request, 'patchwork/todo-list.html', context)
+
+@login_required
+def generate_token(request):
+    if not settings.ENABLE_REST_API:
+        raise RuntimeError('REST API not enabled')
+    try:
+        t = Token.objects.get(user=request.user)
+        t.delete()
+    except Token.DoesNotExist:
+        pass
+    Token.objects.create(user=request.user)
+    return HttpResponseRedirect(reverse('user-profile'))

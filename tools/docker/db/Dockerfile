@@ -8,3 +8,6 @@ ENV MYSQL_PASSWORD password
 # we want to be able to create the database with UTF-8 explictly.
 # We also can't load in the data because it's in XML, yay.
 
+RUN apt-get update && apt-get install -y libeatmydata1
+RUN echo /usr/lib/x86_64-linux-gnu/libeatmydata.so >> /etc/ld.so.preload
+

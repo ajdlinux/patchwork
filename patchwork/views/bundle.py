@@ -44,15 +44,15 @@ if settings.ENABLE_REST_API:
 def rest_auth(request):
     if not settings.ENABLE_REST_API:
         return request.user
-    try:
-        for auth in api_settings.DEFAULT_AUTHENTICATION_CLASSES:
-            if auth == SessionAuthentication:
-                continue
+    for auth in api_settings.DEFAULT_AUTHENTICATION_CLASSES:
+        if auth == SessionAuthentication:
+            continue
+        try:
             auth_result = auth().authenticate(request)
             if auth_result:
                 return auth_result[0]
-    except AuthenticationFailed:
-        pass
+        except AuthenticationFailed:
+            pass
     return request.user
 
 

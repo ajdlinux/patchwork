@@ -101,10 +101,6 @@ urlpatterns = [
         auth_views.password_reset_complete,
         name='password_reset_complete'),
 
-    # token change
-    url(r'^user/generate-token/$', user_views.generate_token,
-        name='generate_token'),
-
     # login/logout
     url(r'^user/login/$', auth_views.login,
         {'template_name': 'patchwork/login.html'},
@@ -237,6 +233,10 @@ if settings.ENABLE_REST_API:
 
     urlpatterns += [
         url(r'^api/(?:(?P<version>(1.0))/)?', include(api_patterns)),
+
+        # token change
+        url(r'^user/generate-token/$', user_views.generate_token,
+            name='generate_token'),
     ]
 
 

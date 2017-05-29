@@ -45,6 +45,7 @@ from patchwork.views import generic_list
 if settings.ENABLE_REST_API:
     from rest_framework.authtoken.models import Token
 
+
 def register(request):
     context = {}
 
@@ -240,14 +241,9 @@ def todo_list(request, project_id):
         State.objects.filter(action_required=True).all()
     return render(request, 'patchwork/todo-list.html', context)
 
+
 @login_required
 def generate_token(request):
-    if not settings.ENABLE_REST_API:
-        raise RuntimeError('REST API not enabled')
-    try:
-        t = Token.objects.get(user=request.user)
-        t.delete()
-    except Token.DoesNotExist:
-        pass
+    Token.objects.filter(user=request.user).delete()
     Token.objects.create(user=request.user)
     return HttpResponseRedirect(reverse('user-profile'))

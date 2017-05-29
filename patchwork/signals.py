@@ -244,6 +244,7 @@ def create_series_completed_event(sender, instance, created, **kwargs):
 
 if settings.ENABLE_REST_API:
     from rest_framework.authtoken.models import Token
+
     @receiver(post_save, sender=settings.AUTH_USER_MODEL)
     def create_user_created_event(sender, instance=None, created=False,
                                   **kwargs):

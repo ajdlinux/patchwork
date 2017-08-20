@@ -945,6 +945,7 @@ def parse_mail(mail, list_id=None):
         diff, message = find_comment_content(mail)
 
     if not (diff or message):
+        logger.error("Couldn't find patch or comment content")
         return  # nothing to work with
 
     pull_url = parse_pull_request(message)
@@ -1087,6 +1088,7 @@ def parse_mail(mail, list_id=None):
     # we only save comments if we have the parent email
     submission = find_submission_for_comment(project, refs)
     if not submission:
+        logger.error("Couldn't find parent submission for comment")
         return
 
     author.save()

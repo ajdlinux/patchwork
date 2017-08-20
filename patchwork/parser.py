@@ -894,7 +894,7 @@ def parse_mail(mail, list_id=None):
         list_id (str): Mailing list ID
 
     Returns:
-        None
+        Patch, CoverLetter, Comment or None
     """
     # some basic sanity checks
     if 'From' not in mail:

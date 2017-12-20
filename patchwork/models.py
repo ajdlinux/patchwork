@@ -22,6 +22,8 @@ from __future__ import absolute_import
 
 from collections import Counter
 from collections import OrderedDict
+from six.moves.urllib.parse import urlparse
+
 import datetime
 import random
 import re
@@ -30,7 +32,7 @@ import django
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
+from django.utils.encoding import python_2_unicode_compatible, escape_uri_path
 from django.utils.functional import cached_property
 
 from patchwork.compat import is_authenticated
@@ -101,6 +103,31 @@ class Project(models.Model):
 
     class Meta:
         ordering = ['linkname']
+
+
+@python_2_unicode_compatible
+class GitHost(models.Model):
+    name = models.CharField(max_length=30)
+    domain = models.CharField(max_length=256)
+    ref_match = models.CharField(max_length=256)
+    ref_url_format = models.CharField(max_length=256)
+
+    def ref_url(self, repo_url, ref):
+        parsed_url = urlparse(repo_url)
+
+        if parsed_url.netloc != self.domain:
+            return None
+
+        if self.ref_match:
+            try:
+                ref = re.match(ref_match, ref).group(1)
+            except IndexError:
+                return None
+
+        return self.ref_url_format.format(url=parsed_url, ref=ref)
+
+    def __str__(self):
+        return self.name
 
 
 @python_2_unicode_compatible

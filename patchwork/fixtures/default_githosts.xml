@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="patchwork.githost">
+    <field type="CharField" name="name">GitHub</field>
+    <field type="CharField" name="domain">github.com</field>
+    <field type="CharField" name="ref_match"></field>
+    <field type="CharField" name="ref_url_format">https://github.com{url.path}/tree/{ref}</field>
+  </object>
+  <!-- ok, there's also git:// github prs with the tags/ prefix -->
+  <object pk="2" model="patchwork.githost">
+    <field type="CharField" name="name">kernel.org branches</field>
+    <field type="CharField" name="domain">git.kernel.org</field>
+    <field type="CharField" name="ref_match">^(?!tags\/)(.*)</field>
+    <field type="CharField" name="ref_url_format">https://git.kernel.org{url.path}/log/?h={ref}</field>
+  </object>
+  <object pk="3" model="patchwork.githost">
+    <field type="CharField" name="name">kernel.org tags</field>
+    <field type="CharField" name="domain">git.kernel.org</field>
+    <field type="CharField" name="ref_match">^tags/(.*)</field>
+    <field type="CharField" name="ref_url_format">https://git.kernel.org{url.path}/tag/?h={ref}</field>
+  </object>
+</django-objects>

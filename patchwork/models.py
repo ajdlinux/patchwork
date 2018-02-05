@@ -442,6 +442,7 @@ class Patch(SeriesMixin, Submission):
             self._set_tag(tag, counter[tag])
 
     def save(self, *args, **kwargs):
+        raise Exception("Oh crap")
         if not hasattr(self, 'state') or not self.state:
             self.state = get_default_initial_patch_state()
 

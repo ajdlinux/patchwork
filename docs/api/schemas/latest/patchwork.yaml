@@ -12,7 +12,7 @@ info:
   license:
     name: GPL v2 License
     url: https://www.gnu.org/licenses/gpl-2.0.html
-  version: '1.1'
+  version: '1.2'
 paths:
   /api/:
     get:
@@ -1368,6 +1368,11 @@ components:
           readOnly: true
           minLength: 1
           maxLength: 255
+        list_archive_url:
+          title: List archive URL
+          type: string
+          readOnly: true
+          nullable: true
         date:
           title: Date
           type: string
@@ -1418,6 +1423,11 @@ components:
           readOnly: true
           minLength: 1
           maxLength: 255
+        list_archive_url:
+          title: List archive URL
+          type: string
+          readOnly: true
+          nullable: true
         date:
           title: Date
           type: string
@@ -1631,6 +1641,11 @@ components:
           readOnly: true
           minLength: 1
           maxLength: 255
+        list_archive_url:
+          title: List archive URL
+          type: string
+          readOnly: true
+          nullable: true
         date:
           title: Date
           type: string
@@ -1863,6 +1878,22 @@ components:
           type: string
           readOnly: true
           maxLength: 64
+        list_archive_url:
+          title: List archive URL
+          type: string
+          format: uri
+          maxLength: 2000
+          nullable: true
+        list_archive_lookup_prefix:
+          title: List archive lookup prefix
+          type: string
+          format: uri
+          maxLength: 2000
+          nullable: true
+          description: >
+            URL prefix for the list archive's Message-ID redirector. To generate
+            the list archive link for a patch, the Message-ID is appended to the
+            end of this prefix.
     Series:
       type: object
       properties:
@@ -2033,6 +2064,11 @@ components:
           type: string
           readOnly: true
           minLength: 1
+        list_archive_url:
+          title: List archive URL
+          type: string
+          readOnly: true
+          nullable: true
         date:
           title: Date
           type: string
@@ -2070,6 +2106,11 @@ components:
           type: string
           readOnly: true
           minLength: 1
+        list_archive_url:
+          title: List archive URL
+          type: string
+          readOnly: true
+          nullable: true
         date:
           title: Date
           type: string
@@ -2162,6 +2203,22 @@ components:
           format: uri
           readOnly: true
           maxLength: 2000
+        list_archive_url:
+          title: List archive URL
+          type: string
+          format: uri
+          maxLength: 2000
+          nullable: true
+        list_archive_lookup_prefix:
+          title: List archive lookup prefix
+          type: string
+          format: uri
+          maxLength: 2000
+          nullable: true
+          description: >
+            URL prefix for the list archive's Message-ID redirector. To generate
+            the list archive link for a patch, the Message-ID is appended to the
+            end of this prefix.
     SeriesEmbedded:
       type: object
       properties:

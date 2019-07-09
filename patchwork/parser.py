@@ -31,7 +31,7 @@ from patchwork.models import State
 from patchwork.models import Submission
 
 
-_hunk_re = re.compile(r'^\@\@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? \@\@')
+_hunk_re = re.compile(r'^\@\@\@? -\d+(?:,(\d+))? \-\d+(?:,(\d+))? ?\+\d+(?:,(\d+))? \@\@\@?')
 _filename_re = re.compile(r'^(---|\+\+\+) (\S+)')
 list_id_headers = ['List-ID', 'X-Mailing-List', 'X-list']
 
@@ -748,7 +748,7 @@ def parse_patch(content):
     # 1: suspected patch header (diff, Index:)
     # 2: patch header line 1 (---)
     # 3: patch header line 2 (+++)
-    # 4: patch hunk header line (@@ line)
+    # 4: patch hunk header line (@@ or @@@ line)
     # 5: patch hunk content
     # 6: patch meta header (rename from/rename to/new file/index)
     #
@@ -757,9 +757,9 @@ def parse_patch(content):
     #  0 -> 2 (---)
     #  1 -> 2 (---)
     #  2 -> 3 (+++)
-    #  3 -> 4 (@@ line)
+    #  3 -> 4 (@@ or @@@ line)
     #  4 -> 5 (patch content)
-    #  5 -> 1 (run out of lines from @@-specifed count)
+    #  5 -> 1 (run out of lines from @@/@@@-specifed count)
     #  1 -> 6 (extended header lines)
     #  6 -> 2 (---)
     #  6 -> 1 (other text)
@@ -821,7 +821,7 @@ def parse_patch(content):
                 state = 2
             elif hunk and line.startswith(r'\ No newline at end of file'):
                 # If we had a hunk and now we see this, it's part of the patch,
-                # and we're still expecting another @@ line.
+                # and we're still expecting another @@/@@@ line.
                 patchbuf += line
             elif hunk:
                 state = 1

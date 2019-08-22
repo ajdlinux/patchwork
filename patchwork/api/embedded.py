@@ -163,13 +163,13 @@ class ProjectSerializer(SerializedRelatedField):
             model = models.Project
             fields = ('id', 'url', 'name', 'link_name', 'list_id',
                       'list_email', 'web_url', 'scm_url', 'webscm_url',
-                      'list_archive_url', 'list_archive_lookup_prefix')
+                      'list_archive_url', 'list_archive_url_format')
             read_only_fields = fields
             extra_kwargs = {
                 'url': {'view_name': 'api-project-detail'},
             }
             versioned_fields = {
-                '1.2': ('list_archive_url', 'list_archive_lookup_prefix'),
+                '1.2': ('list_archive_url', 'list_archive_url_format'),
             }
 
 

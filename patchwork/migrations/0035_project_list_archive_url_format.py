@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='project',
-            name='list_archive_lookup_prefix',
-            field=models.CharField(blank=True, help_text=b"URL prefix for the list archive's Message-ID redirector. To generate the list archive link for a patch, the Message-ID is appended to the end of this prefix.", max_length=2000),
+            name='list_archive_url_format',
+            field=models.CharField(blank=True, help_text=b"URL format for the list archive's Message-ID redirector. {} will be replaced by the Message-ID.", max_length=2000),
         ),
     ]

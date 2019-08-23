@@ -274,15 +274,8 @@ described in :doc:`configuration`.
 * ``NOTIFICATION_FROM_EMAIL``
 
 These are not configurable using environment variables and must be configured
-directly in the ``production.py`` settings file instead. For example, if you
-wish to enable the XML-RPC API, you should add the following:
-
-.. code-block:: python
-
-   ENABLE_XMLRPC = True
-
-Similarly, should you wish to disable the REST API, you should add the
-following:
+directly in the ``production.py`` settings file instead. For example, should
+you wish to disable the REST API, you should add the following:
 
 .. code-block:: python
 

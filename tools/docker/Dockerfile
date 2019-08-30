@@ -51,8 +51,6 @@ RUN rm /etc/localtime; ln -s /usr/share/zoneinfo/$TZ /etc/localtime
 COPY requirements-*.txt /tmp/
 RUN pip3 install virtualenv tox && \
     pip3 install -r /tmp/requirements-dev.txt
-RUN pip2 install virtualenv tox && \
-    pip2 install -r /tmp/requirements-dev.txt
 # we deliberately leave the requirements files in tmp so we can
 # ping the user in entrypoint.sh if the change them!
 

@@ -15,7 +15,6 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.urls import reverse
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils.functional import cached_property
 
 from patchwork.fields import HashField
@@ -32,7 +31,6 @@ def validate_regex_compiles(regex_string):
         raise ValidationError('Invalid regular expression entered!')
 
 
-@python_2_unicode_compatible
 class Person(models.Model):
     # properties
 
@@ -55,7 +53,6 @@ class Person(models.Model):
         verbose_name_plural = 'People'
 
 
-@python_2_unicode_compatible
 class Project(models.Model):
     # properties
 
@@ -107,7 +104,6 @@ class Project(models.Model):
         ordering = ['linkname']
 
 
-@python_2_unicode_compatible
 class DelegationRule(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     user = models.ForeignKey(
@@ -130,7 +126,6 @@ class DelegationRule(models.Model):
         unique_together = (('path', 'project'))
 
 
-@python_2_unicode_compatible
 class UserProfile(models.Model):
     user = models.OneToOneField(User, unique=True, related_name='profile',
                                 on_delete=models.CASCADE)
@@ -208,7 +203,6 @@ def _user_saved_callback(sender, created, instance, **kwargs):
 models.signals.post_save.connect(_user_saved_callback, sender=User)
 
 
-@python_2_unicode_compatible
 class State(models.Model):
     name = models.CharField(max_length=100)
     ordering = models.IntegerField(unique=True)
@@ -225,7 +219,6 @@ class State(models.Model):
         ordering = ['ordering']
 
 
-@python_2_unicode_compatible
 class Tag(models.Model):
     name = models.CharField(max_length=20)
     pattern = models.CharField(
@@ -352,7 +345,6 @@ class FilenameMixin(object):
         return fname
 
 
-@python_2_unicode_compatible
 class Submission(FilenameMixin, EmailMixin, models.Model):
     # parent
 
@@ -401,7 +393,6 @@ class CoverLetter(Submission):
         return reverse('cover-mbox', kwargs={'cover_id': self.id})
 
 
-@python_2_unicode_compatible
 class Patch(Submission):
     # patch metadata
 
@@ -638,7 +629,6 @@ class Comment(EmailMixin, models.Model):
         ]
 
 
-@python_2_unicode_compatible
 class Series(FilenameMixin, models.Model):
     """A collection of patches."""
 
@@ -753,7 +743,6 @@ class Series(FilenameMixin, models.Model):
         verbose_name_plural = 'Series'
 
 
-@python_2_unicode_compatible
 class SeriesReference(models.Model):
     """A reference found in a series.
 
@@ -827,7 +816,6 @@ class BundlePatch(models.Model):
         ordering = ['order']
 
 
-@python_2_unicode_compatible
 class Check(models.Model):
 
     """Check for a patch.
@@ -1004,7 +992,6 @@ class EmailConfirmation(models.Model):
         super(EmailConfirmation, self).save()
 
 
-@python_2_unicode_compatible
 class EmailOptout(models.Model):
     email = models.CharField(max_length=200, primary_key=True)
 

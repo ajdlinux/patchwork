@@ -334,7 +334,7 @@ class EmailMixin(models.Model):
         # Modifying a submission via admin interface changes '\n' newlines in
         # message content to '\r\n'. We need to fix them to avoid problems,
         # especially as git complains about malformed patches when PW runs
-        # on PY2
+        # on PY2 TODO: is this still needed on PY3?
         self.content = self.content.replace('\r\n', '\n')
         super(EmailMixin, self).save(*args, **kwargs)
 

@@ -53,6 +53,16 @@ class LoginForm(forms.Form):
 class EmailForm(forms.Form):
     email = forms.EmailField(max_length=200)
 
+class PrimaryEmailModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.email
+
+class PrimaryEmailForm(forms.Form):
+    email = PrimaryEmailModelChoiceField(queryset=None, to_field_name='email', empty_label=None)
+
+    def __init__(self, people, *args, **kwargs):
+        super(PrimaryEmailForm, self).__init__(*args, **kwargs)
+        self.fields['email'].queryset = people
 
 class BundleForm(forms.ModelForm):
     name = forms.RegexField(

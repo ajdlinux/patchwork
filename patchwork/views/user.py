@@ -18,6 +18,7 @@ from django.urls import reverse
 
 from patchwork.filters import DelegateFilter
 from patchwork.forms import EmailForm
+from patchwork.forms import PrimaryEmailForm
 from patchwork.forms import RegistrationForm
 from patchwork.forms import UserProfileForm
 from patchwork.models import EmailConfirmation
@@ -120,6 +121,7 @@ def profile(request):
         .extra(select={'is_optout': optout_query})
     context['linked_emails'] = people
     context['linkform'] = EmailForm()
+    context['primaryemailform'] = PrimaryEmailForm(people, initial={'email': request.user.email}) # gah the initial don't work
     context['api_token'] = request.user.profile.token
     if settings.ENABLE_REST_API:
         context['rest_api_enabled'] = True
@@ -188,6 +190,22 @@ def unlink(request, person_id):
         person.save()
 
     return HttpResponseRedirect(reverse('user-profile'))
+
+
+@login_required
+def set_primary_email(request):
+    if request.method == 'POST':
+        people = Person.objects.filter(user=request.user)
+        form = PrimaryEmailForm(people, request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            person = get_object_or_404(Person, email=data['email']) # TODO: 404??
+            request.user.email = person.email
+            # TODO: We probably want to send a notification email that thep rimary email has been changed
+        else:
+            pass # do something
+    else:
+        pass # uh do something i guess
 
 
 @login_required

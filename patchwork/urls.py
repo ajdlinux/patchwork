@@ -95,6 +95,8 @@ urlpatterns = [
         name='user-link'),
     url(r'^user/unlink/(?P<person_id>[^/]+)/$', user_views.unlink,
         name='user-unlink'),
+    url(r'^user/set-primary-email/$', user_views.set_primary_email,
+        name='user-set-primary-email'),
 
     # password change
     url(r'^user/password-change/$',

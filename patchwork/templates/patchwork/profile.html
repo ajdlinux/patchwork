@@ -93,6 +93,16 @@ address.</p>
  </tr>
 </table>
 </div>
+
+<div class="box">
+  <h2>Primary email address</h2>
+  <p>The primary email address is where account TODO TODO TODO</p>
+  <form action="{% url 'user-set-primary-email' %}" method="post">
+    {% csrf_token %}
+    {{ primaryemailform.email }}
+    <input type="submit" value="Set primary email" />
+  </form>
+</div>
 </div>
 
 <div class="rightcol">
